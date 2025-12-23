@@ -1,0 +1,86 @@
+[
+  {
+    "sex": "female",
+    "pclass": 1,
+    "alone": "True",
+    "n": 34,
+    "rate": 0.9705882352941176
+  },
+  {
+    "sex": "female",
+    "pclass": 1,
+    "alone": "False",
+    "n": 60,
+    "rate": 0.9666666666666667
+  },
+  {
+    "sex": "female",
+    "pclass": 2,
+    "alone": "False",
+    "n": 44,
+    "rate": 0.9318181818181818
+  },
+  {
+    "sex": "female",
+    "pclass": 2,
+    "alone": "True",
+    "n": 32,
+    "rate": 0.90625
+  },
+  {
+    "sex": "female",
+    "pclass": 3,
+    "alone": "True",
+    "n": 60,
+    "rate": 0.6166666666666667
+  },
+  {
+    "sex": "male",
+    "pclass": 1,
+    "alone": "False",
+    "n": 47,
+    "rate": 0.425531914893617
+  },
+  {
+    "sex": "female",
+    "pclass": 3,
+    "alone": "False",
+    "n": 84,
+    "rate": 0.4166666666666667
+  },
+  {
+    "sex": "male",
+    "pclass": 1,
+    "alone": "True",
+    "n": 75,
+    "rate": 0.3333333333333333
+  },
+  {
+    "sex": "male",
+    "pclass": 2,
+    "alone": "False",
+    "n": 36,
+    "rate": 0.2777777777777778
+  },
+  {
+    "sex": "male",
+    "pclass": 3,
+    "alone": "False",
+    "n": 83,
+    "rate": 0.18072289156626506
+  },
+  {
+    "sex": "male",
+    "pclass": 3,
+    "alone": "True",
+    "n": 264,
+    "rate": 0.12121212121212122
+  },
+  {
+    "sex": "male",
+    "pclass": 2,
+    "alone": "True",
+    "n": 72,
+    "rate": 0.09722222222222222
+  }
+]
