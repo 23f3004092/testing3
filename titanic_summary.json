@@ -1,0 +1,19 @@
+{
+  "rows": 891,
+  "columns": 19,
+  "survived_n": 342,
+  "died_n": 549,
+  "survival_rate": 0.3838383838383838,
+  "female_survival_rate": 0.7420382165605095,
+  "male_survival_rate": 0.18890814558058924,
+  "first_class_survival_rate": 0.6296296296296297,
+  "third_class_survival_rate": 0.24236252545824846,
+  "median_fare": 14.4542,
+  "median_age": 28.0,
+  "missingness": {
+    "age": 0.19865319865319866,
+    "deck": 0.7721661054994389,
+    "embarked": 0.002244668911335578,
+    "embark_town": 0.002244668911335578
+  }
+}
