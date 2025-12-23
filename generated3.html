@@ -1,0 +1,783 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>The Titanic Case File: Who Got a Seat in the Lifeboats?</title><link rel="preconnect" href="https://cdn.plot.ly"/><script src="https://cdn.plot.ly/plotly-3.3.0.min.js" charset="utf-8"></script><style>
+:root{
+  --bg:#070A10;
+  --panel:#0C1220;
+  --panel2:#0A0F1B;
+  --ink:#D7E0FF;
+  --muted:#93A4D6;
+  --grid:rgba(148,163,184,.18);
+  --accent:#F7C948;
+  --accent2:#4DE3C1;
+  --danger:#FF5C7A;
+  --violet:#8A7CFF;
+  --shadow: 0 20px 60px rgba(0,0,0,.55);
+  --stroke: rgba(255,255,255,.08);
+  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family:var(--sans);
+  color:var(--ink);
+  background:
+    radial-gradient(1200px 700px at 10% 10%, rgba(138,124,255,.15), transparent 60%),
+    radial-gradient(900px 500px at 80% 15%, rgba(77,227,193,.12), transparent 55%),
+    radial-gradient(900px 500px at 70% 90%, rgba(247,201,72,.12), transparent 60%),
+    linear-gradient(180deg, #060813 0%, #070A10 40%, #04060C 100%);
+  overflow-x:hidden;
+}
+
+/* Subtle film grain */
+body:before{
+  content:"";
+  position:fixed; inset:0;
+  pointer-events:none;
+  background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="140" height="140"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch"/></filter><rect width="140" height="140" filter="url(%23n)" opacity="0.35"/></svg>');
+  mix-blend-mode:overlay;
+  opacity:.12;
+}
+
+header{
+  position:relative;
+  padding:40px 22px 18px;
+}
+.container{max-width:1180px;margin:0 auto;}
+
+.topbar{
+  display:flex; gap:14px; align-items:center; justify-content:space-between;
+  padding:14px 16px;
+  border:1px solid var(--stroke);
+  border-radius:16px;
+  background:linear-gradient(180deg, rgba(12,18,32,.78), rgba(10,15,27,.72));
+  box-shadow:var(--shadow);
+}
+.badge{
+  display:inline-flex; align-items:center; gap:10px;
+  font-family:var(--mono);
+  letter-spacing:.08em;
+  font-size:12px;
+  color:rgba(247,201,72,.95);
+}
+.dot{
+  width:10px;height:10px;border-radius:50%;
+  background:var(--accent);
+  box-shadow:0 0 22px rgba(247,201,72,.65);
+  animation:pulse 2.2s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:.9}50%{transform:scale(1.55);opacity:1}}
+
+.nav{
+  display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end;
+}
+.nav a{
+  text-decoration:none;
+  color:var(--muted);
+  border:1px solid rgba(147,164,214,.22);
+  padding:8px 10px;
+  border-radius:999px;
+  font-family:var(--mono);
+  font-size:12px;
+  transition:all .2s ease;
+}
+.nav a:hover{color:var(--ink); border-color:rgba(247,201,72,.5); box-shadow:0 0 0 4px rgba(247,201,72,.12)}
+
+.hero{
+  padding:26px 0 10px;
+  display:grid;
+  grid-template-columns: 1.35fr .65fr;
+  gap:18px;
+  align-items:stretch;
+}
+@media (max-width: 980px){.hero{grid-template-columns:1fr}}
+
+h1{
+  margin:0;
+  font-size:clamp(28px, 4vw, 46px);
+  letter-spacing:-.02em;
+  line-height:1.05;
+}
+.subhead{
+  margin:12px 0 0;
+  color:rgba(215,224,255,.82);
+  font-size:16px;
+  line-height:1.55;
+}
+
+.casecard{
+  border:1px solid var(--stroke);
+  border-radius:18px;
+  background:linear-gradient(180deg, rgba(12,18,32,.88), rgba(10,15,27,.72));
+  box-shadow:var(--shadow);
+  padding:16px;
+  overflow:hidden;
+  position:relative;
+}
+.casecard:after{
+  content:"";
+  position:absolute; inset:-2px;
+  background:conic-gradient(from 180deg, rgba(247,201,72,.0), rgba(247,201,72,.14), rgba(77,227,193,.12), rgba(138,124,255,.12), rgba(247,201,72,.0));
+  filter:blur(18px);
+  opacity:.55;
+  z-index:-1;
+}
+
+.kpis{
+  display:grid; grid-template-columns:repeat(2,1fr); gap:10px;
+}
+.kpi{
+  border:1px solid rgba(255,255,255,.07);
+  background:rgba(7,10,16,.35);
+  border-radius:14px;
+  padding:12px 12px 10px;
+  min-height:84px;
+}
+.kpi .label{
+  font-family:var(--mono);
+  text-transform:uppercase;
+  letter-spacing:.12em;
+  color:rgba(147,164,214,.9);
+  font-size:11px;
+}
+.kpi .value{
+  font-size:28px;
+  margin-top:6px;
+  letter-spacing:-.02em;
+}
+.kpi .hint{color:rgba(215,224,255,.72); font-size:12px; margin-top:2px}
+
+.section{
+  margin:22px auto;
+  padding:0 22px;
+}
+
+.story{
+  max-width:1180px;
+  margin:0 auto;
+  display:grid;
+  grid-template-columns: 0.95fr 1.05fr;
+  gap:16px;
+  align-items:start;
+}
+@media (max-width: 980px){.story{grid-template-columns:1fr}}
+
+.panel{
+  border:1px solid var(--stroke);
+  border-radius:18px;
+  background:linear-gradient(180deg, rgba(12,18,32,.78), rgba(10,15,27,.72));
+  box-shadow:var(--shadow);
+  overflow:hidden;
+}
+
+.panel .pad{padding:16px}
+.panel h2{
+  margin:0;
+  font-size:20px;
+  letter-spacing:-.01em;
+}
+.panel p{margin:10px 0 0; color:rgba(215,224,255,.82); line-height:1.6}
+.panel .meta{margin-top:10px; color:rgba(147,164,214,.9); font-family:var(--mono); font-size:12px}
+
+.chart{
+  height:420px;
+  width:100%;
+}
+.chart.tall{height:480px}
+.chart.short{height:360px}
+
+.insights{
+  border-top:1px solid rgba(255,255,255,.07);
+  padding:12px 16px 16px;
+  color:rgba(215,224,255,.82);
+  line-height:1.55;
+}
+.insights b{color:rgba(247,201,72,.95)}
+
+.pull{
+  margin-top:12px;
+  padding:12px 14px;
+  border-radius:14px;
+  border:1px dashed rgba(247,201,72,.35);
+  background:linear-gradient(180deg, rgba(247,201,72,.08), rgba(247,201,72,.03));
+  color:rgba(215,224,255,.88);
+}
+.pull .q{font-size:15px; line-height:1.55; margin:0}
+.pull .by{margin:8px 0 0; font-family:var(--mono); font-size:12px; color:rgba(247,201,72,.9)}
+
+.controls{
+  display:flex; flex-wrap:wrap; gap:10px; align-items:center;
+  margin-top:12px;
+}
+.select{
+  display:flex; gap:8px; align-items:center;
+  border:1px solid rgba(147,164,214,.22);
+  background:rgba(7,10,16,.25);
+  border-radius:999px;
+  padding:8px 10px;
+  color:rgba(215,224,255,.88);
+  font-family:var(--mono);
+  font-size:12px;
+}
+select{
+  background:transparent;
+  border:none;
+  color:rgba(215,224,255,.92);
+  outline:none;
+  font-family:var(--mono);
+}
+select option{background:#0A0F1B;color:var(--ink)}
+
+.tablewrap{overflow:auto}
+.table{
+  width:100%;
+  border-collapse:collapse;
+  font-family:var(--mono);
+  font-size:12px;
+}
+.table th,.table td{
+  padding:10px 10px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+  white-space:nowrap;
+}
+.table th{
+  text-align:left;
+  color:rgba(147,164,214,.95);
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  font-weight:600;
+}
+.table tr:hover td{background:rgba(247,201,72,.06)}
+
+footer{
+  padding:28px 22px 44px;
+  color:rgba(147,164,214,.85);
+}
+.foot{
+  max-width:1180px;margin:0 auto;
+  border-top:1px solid rgba(255,255,255,.08);
+  padding-top:16px;
+  display:flex; gap:14px; justify-content:space-between; flex-wrap:wrap;
+}
+.foot .note{max-width:720px; line-height:1.55}
+
+/* Reveal on scroll */
+.reveal{opacity:0; transform:translateY(14px); transition:opacity .7s ease, transform .7s ease}
+.reveal.inview{opacity:1; transform:translateY(0)}
+
+/* Plotly theming */
+.plotly .modebar{filter:contrast(1.05) saturate(1.2)}
+
+.smallcaps{font-family:var(--mono); letter-spacing:.14em; text-transform:uppercase; font-size:11px; color:rgba(147,164,214,.9)}
+hr.sep{border:none;border-top:1px solid rgba(255,255,255,.08); margin:14px 0}
+
+</style></head><body>
+<header>
+  <div class="container">
+    <div class="topbar reveal">
+      <div class="badge"><span class="dot"></span> CASE FILE // RMS TITANIC</div>
+      <nav class="nav" aria-label="Section navigation">
+        <a href="#scene">Scene</a>
+        <a href="#suspects">Suspects</a>
+        <a href="#motive">Motive</a>
+        <a href="#forensics">Forensics</a>
+        <a href="#verdict">Verdict</a>
+      </nav>
+    </div>
+
+    <div class="hero">
+      <div class="casecard reveal" style="padding:18px 18px 16px;">
+        <div class="smallcaps">A mystery in plain sight</div>
+        <h1>The Titanic lifeboat puzzle: it wasn’t just luck—so what was it?</h1>
+        <p class="subhead">We reopen the passenger ledger (891 records) to reconstruct the rules that quietly decided who lived. The evidence is uneven, the deck logs are missing, and the “women and children first” story… is only half the truth.</p>
+        <div class="pull">
+          <p class="q">“If this were random, the patterns would blur. Instead, they snap into place.”</p>
+          <div class="by">— Analyst’s margin note</div>
+        </div>
+      </div>
+      <div class="casecard reveal">
+        <div class="smallcaps">Quick dossier</div>
+        <div class="kpis" id="kpis">
+          <div class="kpi"><div class="label">Passengers</div><div class="value" id="kpi_rows">—</div><div class="hint" id="kpi_cols">—</div></div>
+          <div class="kpi"><div class="label">Survival rate</div><div class="value" id="kpi_survival">—</div><div class="hint" id="kpi_counts">—</div></div>
+          <div class="kpi"><div class="label">Missing age</div><div class="value" id="kpi_age_missing">—</div><div class="hint">share of records</div></div>
+          <div class="kpi"><div class="label">Missing deck</div><div class="value" id="kpi_deck_missing">—</div><div class="hint">share of records</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<section class="section" id="scene">
+  <div class="story">
+    <div class="panel reveal">
+      <div class="pad">
+        <h2>Scene 1 — The baseline: a coin toss it wasn’t</h2>
+        <p>The passenger list looks ordinary until you ask a simple question: <b>who survived?</b> If evacuation were evenly available, survival would hover around 50%. Instead, the ledger records a sharp imbalance—our first hint that access, not chance, was doing the work.</p>
+        <div class="meta">Evidence: overall survival, by gender</div>
+      </div>
+      <div class="insights" id="insight_baseline">Loading…</div>
+    </div>
+
+    <div class="panel reveal">
+      <div class="pad">
+        <div id="chart_sex" class="chart"></div>
+      </div>
+      <div class="insights" id="insight_sex">Loading…</div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="suspects">
+  <div class="story">
+    <div class="panel reveal">
+      <div class="pad">
+        <h2>Scene 2 — Class privilege: the quiet bouncer at the gangway</h2>
+        <p>Passenger class wasn’t just about comfort; it shaped proximity to lifeboats, crew attention, and the time it took to reach the deck. In the data, <b>class behaves like a gatekeeper</b>.</p>
+        <div class="meta">Evidence: survival by passenger class</div>
+      </div>
+      <div class="insights" id="insight_class">Loading…</div>
+    </div>
+
+    <div class="panel reveal">
+      <div class="pad">
+        <div id="chart_class" class="chart"></div>
+      </div>
+      <div class="insights" id="insight_class2">Loading…</div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="story">
+    <div class="panel reveal">
+      <div class="pad">
+        <h2>Scene 3 — The real rulebook: gender × class</h2>
+        <p>“Women first” is true, but incomplete. The cross-tab reveals the real operating system: <b>gender and class acted together</b>. A third-class woman and a first-class man did not face the same odds.</p>
+        <div class="meta">Evidence: survival heatmap (sex × class)</div>
+      </div>
+      <div class="insights" id="insight_heat">Loading…</div>
+    </div>
+
+    <div class="panel reveal">
+      <div class="pad">
+        <div id="chart_heat" class="chart"></div>
+      </div>
+      <div class="insights">Try hovering each cell: it’s where the “policy” becomes visible.</div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="motive">
+  <div class="story">
+    <div class="panel reveal">
+      <div class="pad">
+        <h2>Scene 4 — Age: children helped, but not uniformly</h2>
+        <p>Age should be a straightforward factor: children prioritized, older passengers disadvantaged. Yet the distribution is messy because <b>age is missing for ~20%</b> of passengers. Even with that limitation, the shape tells a story: younger ages concentrate more survivors, but the effect is smaller than the gender/class split.</p>
+        <div class="controls" aria-label="Age chart controls">
+          <div class="select">View: <select id="age_view"><option value="overlay" selected>Overlay bars</option><option value="stack">Stacked</option></select></div>
+        </div>
+        <div class="meta">Evidence: age histogram by outcome</div>
+      </div>
+      <div class="insights" id="insight_age">Loading…</div>
+    </div>
+
+    <div class="panel reveal">
+      <div class="pad">
+        <div id="chart_age" class="chart tall"></div>
+      </div>
+      <div class="insights" id="insight_age2">Loading…</div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="forensics">
+  <div class="story">
+    <div class="panel reveal">
+      <div class="pad">
+        <h2>Scene 5 — Money leaves fingerprints: fare and survival</h2>
+        <p>Fare is a proxy for access: cabin location, class, and the social network that could pull strings. Survivors tend to cluster at higher fares, but it’s not a clean cut—some low-fare passengers survived, suggesting <b>luck still mattered at the margins</b>.</p>
+        <div class="meta">Evidence: fare distribution by outcome + fare quartiles</div>
+      </div>
+      <div class="insights" id="insight_fare">Loading…</div>
+    </div>
+
+    <div class="panel reveal">
+      <div class="pad">
+        <div id="chart_fare" class="chart"></div>
+        <hr class="sep"/>
+        <div id="chart_fare_q" class="chart short"></div>
+      </div>
+      <div class="insights" id="insight_fare2">Loading…</div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="story">
+    <div class="panel reveal">
+      <div class="pad">
+        <h2>Scene 6 — The overlooked variable: traveling alone</h2>
+        <p>In disasters, coordination is an advantage. Families may protect children—but they also slow each other down. The data hints at a twist: <b>small families do relatively well</b>, while very large groups underperform.</p>
+        <div class="meta">Evidence: survival by family size band + port of embarkation</div>
+      </div>
+      <div class="insights" id="insight_family">Loading…</div>
+    </div>
+
+    <div class="panel reveal">
+      <div class="pad">
+        <div id="chart_family" class="chart short"></div>
+        <hr class="sep"/>
+        <div id="chart_embarked" class="chart short"></div>
+      </div>
+      <div class="insights" id="insight_embarked">Loading…</div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="verdict">
+  <div class="story">
+    <div class="panel reveal">
+      <div class="pad">
+        <h2>Final reconstruction — A simple model, a sharp answer</h2>
+        <p>To test which factors best predict survival, we fit a compact logistic model (no deep learning, no drama). It’s not perfect—but if the strongest effects match the narrative, we can trust the story.</p>
+        <div class="meta">Evidence: odds ratios + model AUC</div>
+      </div>
+      <div class="insights" id="insight_model">Loading…</div>
+    </div>
+
+    <div class="panel reveal">
+      <div class="pad">
+        <div id="chart_model" class="chart"></div>
+        <hr class="sep"/>
+        <div class="pad" style="padding:0 0 10px;">
+          <div class="smallcaps" style="padding:0 2px 10px;">Most “survivable” passenger profiles (by observed rate)</div>
+          <div class="tablewrap">
+            <table class="table" id="profiles_table">
+              <thead><tr><th>sex</th><th>class</th><th>alone</th><th>n</th><th>survival rate</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="insights">The model summarizes the pattern: <b>being male</b> and <b>being in 3rd class</b> are the biggest negatives; higher fare adds a smaller positive signal.</div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="foot">
+    <div class="note">
+      <div class="smallcaps">Method & provenance</div>
+      <p style="margin:8px 0 0;">Dataset: the classic Titanic passenger table distributed via the seaborn sample datasets (891 rows). Several columns (notably <span style="color:rgba(247,201,72,.95)">deck</span>) are heavily missing, so any “deck-level” conclusions are treated as incomplete evidence, not a final fact.</p>
+      <p style="margin:10px 0 0;">This page is designed as an interactive case file: hover, zoom, and toggle views to test the story against the numbers.</p>
+    </div>
+    <div style="min-width:260px;">
+      <div class="smallcaps">Case status</div>
+      <p style="margin:8px 0 0; font-family:var(--mono);">CLOSED // patterns identified</p>
+      <p style="margin:10px 0 0; color:rgba(147,164,214,.9);">Generated locally from JSON evidence files.</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+const fmtPct = (x) => (x*100).toFixed(1) + "%";
+const fmtNum = (x) => new Intl.NumberFormat().format(x);
+
+const THEME = {
+  paper_bgcolor: 'rgba(0,0,0,0)',
+  plot_bgcolor: 'rgba(0,0,0,0)',
+  font: {color: 'rgba(215,224,255,0.92)', family: 'ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial'},
+  margin: {l: 54, r: 18, t: 34, b: 48},
+  xaxis: {gridcolor: 'rgba(148,163,184,0.18)', zerolinecolor:'rgba(148,163,184,0.18)', linecolor:'rgba(148,163,184,0.24)', tickfont:{color:'rgba(215,224,255,0.82)'}},
+  yaxis: {gridcolor: 'rgba(148,163,184,0.18)', zerolinecolor:'rgba(148,163,184,0.18)', linecolor:'rgba(148,163,184,0.24)', tickfont:{color:'rgba(215,224,255,0.82)'}},
+  legend: {orientation:'h', y:1.14, x:0, bgcolor:'rgba(0,0,0,0)'}
+};
+
+function plotConfig(){
+  return {displayModeBar: true, responsive: true, displaylogo:false};
+}
+
+async function loadJSON(path){
+  const r = await fetch(path, {cache:'no-store'});
+  if(!r.ok) throw new Error(`Failed to load ${path}`);
+  return await r.json();
+}
+
+function ensureReveal(){
+  const nodes = document.querySelectorAll('.reveal');
+  const io = new IntersectionObserver((entries)=>{
+    for(const e of entries){
+      if(e.isIntersecting){e.target.classList.add('inview'); io.unobserve(e.target);}
+    }
+  }, {threshold:0.12});
+  nodes.forEach(n=>io.observe(n));
+}
+
+function barSurvivalRate(divId, rows, xKey, title, color){
+  const x = rows.map(r=>r[xKey]);
+  const rate = rows.map(r=>r.rate);
+  const n = rows.map(r=>r.n);
+
+  const trace = {
+    type:'bar',
+    x, y: rate,
+    marker:{color: color, line:{color:'rgba(255,255,255,0.14)', width:1}},
+    text: rate.map(fmtPct),
+    textposition:'outside',
+    hovertemplate: `<b>%{x}</b><br>Survival: %{y:.1%}<br>N: %{customdata}<extra></extra>`,
+    customdata: n
+  };
+  const layout = {
+    ...THEME,
+    title: {text: title, font:{size:14, color:'rgba(147,164,214,0.95)'}},
+    yaxis: {...THEME.yaxis, tickformat:'.0%', range:[0,1]},
+    xaxis: {...THEME.xaxis},
+    margin:{l:58,r:18,t:46,b:52},
+  };
+  Plotly.newPlot(divId, [trace], layout, plotConfig());
+}
+
+function heatmap(divId, heat){
+  const trace = {
+    type:'heatmap',
+    x: heat.x,
+    y: heat.y,
+    z: heat.z,
+    colorscale: [
+      [0,'rgba(255,92,122,0.95)'],
+      [0.35,'rgba(247,201,72,0.92)'],
+      [1,'rgba(77,227,193,0.95)']
+    ],
+    zmin:0, zmax:1,
+    hovertemplate: 'Class %{x}<br>%{y}<br>Survival: %{z:.1%}<extra></extra>'
+  };
+  const layout = {
+    ...THEME,
+    title:{text:'Survival rate (sex × class)', font:{size:14, color:'rgba(147,164,214,0.95)'}},
+    margin:{l:86,r:20,t:46,b:50},
+    xaxis:{...THEME.xaxis, title:'Passenger class', tickmode:'array'},
+    yaxis:{...THEME.yaxis, title:'Sex'},
+  };
+  Plotly.newPlot(divId, [trace], layout, plotConfig());
+}
+
+function ageHistogram(divId, ageHist, mode){
+  const died = ageHist.find(d=>d.status==='Died');
+  const surv = ageHist.find(d=>d.status==='Survived');
+  const mids = (edges)=>edges.slice(0,-1).map((e,i)=>(e+edges[i+1])/2);
+
+  const xD = mids(died.edges), xS = mids(surv.edges);
+  const t1 = {type:'bar', name:'Died', x:xD, y:died.counts, opacity: (mode==='overlay'?0.70:0.90), marker:{color:'rgba(255,92,122,0.88)', line:{color:'rgba(255,255,255,0.12)', width:1}}, hovertemplate:'Age bin midpoint %{x}<br>Count %{y}<extra></extra>'};
+  const t2 = {type:'bar', name:'Survived', x:xS, y:surv.counts, opacity: (mode==='overlay'?0.70:0.90), marker:{color:'rgba(77,227,193,0.88)', line:{color:'rgba(255,255,255,0.12)', width:1}}, hovertemplate:'Age bin midpoint %{x}<br>Count %{y}<extra></extra>'};
+
+  const layout = {
+    ...THEME,
+    title:{text:'Age distribution (5-year bins)', font:{size:14, color:'rgba(147,164,214,0.95)'}},
+    barmode: mode==='stack' ? 'stack' : 'overlay',
+    xaxis:{...THEME.xaxis, title:'Age (approx. midpoint)'},
+    yaxis:{...THEME.yaxis, title:'Passengers (count)'},
+    margin:{l:60,r:18,t:46,b:54},
+  };
+  Plotly.react(divId, [t1,t2], layout, plotConfig());
+}
+
+function fareBox(divId, fareBy){
+  const traces = Object.entries(fareBy).map(([k,arr])=>({
+    type:'box',
+    name:k,
+    y:arr,
+    boxpoints:false,
+    fillcolor: k==='Survived' ? 'rgba(77,227,193,0.35)' : 'rgba(255,92,122,0.35)',
+    line:{color: k==='Survived' ? 'rgba(77,227,193,0.95)' : 'rgba(255,92,122,0.95)', width:1.3},
+    hovertemplate:`<b>${k}</b><br>Fare: %{y:.2f}<extra></extra>`
+  }));
+
+  const layout = {
+    ...THEME,
+    title:{text:'Fare distribution by outcome', font:{size:14, color:'rgba(147,164,214,0.95)'}},
+    yaxis:{...THEME.yaxis, title:'Fare', rangemode:'tozero'},
+    xaxis:{...THEME.xaxis, title:''},
+    margin:{l:70,r:18,t:46,b:54}
+  };
+  Plotly.newPlot(divId, traces, layout, plotConfig());
+}
+
+function oddsChart(divId, model){
+  const items = model.items.slice().sort((a,b)=>Math.abs(a.coef)-Math.abs(b.coef));
+  const x = items.map(d=>d.odds_ratio);
+  const y = items.map(d=>d.feature);
+  const direction = items.map(d=>d.coef>=0 ? 'helps survival' : 'hurts survival');
+
+  const trace = {
+    type:'bar', orientation:'h',
+    x, y,
+    marker:{
+      color: items.map(d=>d.coef>=0 ? 'rgba(77,227,193,0.85)' : 'rgba(255,92,122,0.85)'),
+      line:{color:'rgba(255,255,255,0.12)', width:1}
+    },
+    customdata: direction,
+    hovertemplate:'<b>%{y}</b><br>Odds ratio: %{x:.2f}<br>%{customdata}<extra></extra>'
+  };
+
+  const layout = {
+    ...THEME,
+    title:{text:'Model evidence: strongest effects (odds ratios)', font:{size:14, color:'rgba(147,164,214,0.95)'}},
+    xaxis:{...THEME.xaxis, title:'Odds ratio (1 = neutral)', zeroline:true, zerolinecolor:'rgba(247,201,72,0.28)'},
+    yaxis:{...THEME.yaxis, title:''},
+    margin:{l:160,r:18,t:46,b:54},
+    shapes:[{type:'line', x0:1, x1:1, y0:-0.5, y1:items.length-0.5, xref:'x', yref:'y', line:{color:'rgba(247,201,72,0.55)', width:2, dash:'dot'}}]
+  };
+
+  Plotly.newPlot(divId,[trace],layout, plotConfig());
+}
+
+function rateBar(divId, rows, key, title, color){
+  const x = rows.map(r=>r[key]);
+  const y = rows.map(r=>r.rate);
+  const n = rows.map(r=>r.n);
+  const trace = {
+    type:'bar', x, y,
+    marker:{color: color, line:{color:'rgba(255,255,255,0.14)', width:1}},
+    hovertemplate:`<b>%{x}</b><br>Survival: %{y:.1%}<br>N: %{customdata}<extra></extra>`,
+    customdata:n
+  };
+  const layout={
+    ...THEME,
+    title:{text:title, font:{size:14, color:'rgba(147,164,214,0.95)'}},
+    yaxis:{...THEME.yaxis, tickformat:'.0%', range:[0,1]},
+    xaxis:{...THEME.xaxis},
+    margin:{l:58,r:18,t:46,b:54}
+  };
+  Plotly.newPlot(divId,[trace],layout, plotConfig());
+}
+
+function updateKpis(summary){
+  document.getElementById('kpi_rows').textContent = fmtNum(summary.rows);
+  document.getElementById('kpi_cols').textContent = `${summary.columns} columns in the ledger`;
+  document.getElementById('kpi_survival').textContent = fmtPct(summary.survival_rate);
+  document.getElementById('kpi_counts').textContent = `${fmtNum(summary.survived_n)} survived • ${fmtNum(summary.died_n)} died`;
+  document.getElementById('kpi_age_missing').textContent = fmtPct(summary.missingness.age);
+  document.getElementById('kpi_deck_missing').textContent = fmtPct(summary.missingness.deck);
+}
+
+function setInsights(summary, sexRows, classRows, heat, ageHist, ageGroup, fareQ, family, emb, model){
+  const female = sexRows.find(d=>d.sex==='female');
+  const male = sexRows.find(d=>d.sex==='male');
+  const first = classRows.find(d=>d.pclass===1);
+  const third = classRows.find(d=>d.pclass===3);
+
+  const baseline = document.getElementById('insight_baseline');
+  baseline.innerHTML = `Out of <b>${fmtNum(summary.rows)}</b> passengers in this table, only <b>${fmtPct(summary.survival_rate)}</b> survived. That’s not “chance”—that’s a system under stress choosing winners and losers.`;
+
+  document.getElementById('insight_sex').innerHTML = `Gender is the loudest signal in the ledger: <b>${fmtPct(female.rate)}</b> of women survived vs <b>${fmtPct(male.rate)}</b> of men. Whatever the official protocol was, it was enforced unevenly.`;
+
+  document.getElementById('insight_class').innerHTML = `Class acts like access control. First class survival: <b>${fmtPct(first.rate)}</b>. Third class: <b>${fmtPct(third.rate)}</b>. The gap is too large to explain away with randomness.`;
+  document.getElementById('insight_class2').innerHTML = `A practical reading: third-class passengers were physically and socially farther from lifeboats. The “distance” shows up as a survival penalty in the numbers.`;
+
+  // Heatmap: highlight extremes
+  let min = {v:Infinity, sex:null, cls:null};
+  let max = {v:-Infinity, sex:null, cls:null};
+  heat.y.forEach((sy, i)=>{
+    heat.x.forEach((cx, j)=>{
+      const v = heat.z[i][j];
+      if(v<min.v){min={v,sex:sy,cls:cx}};
+      if(v>max.v){max={v,sex:sy,cls:cx}};
+    });
+  });
+  document.getElementById('insight_heat').innerHTML = `The extremes are telling: the lowest cell is <b>${min.sex}</b> in <b>class ${min.cls}</b> (${fmtPct(min.v)}), while the highest is <b>${max.sex}</b> in <b>class ${max.cls}</b> (${fmtPct(max.v)}). This is the “real rulebook” written in outcomes.`;
+
+  // Age insights
+  const unknownAgeShare = summary.missingness.age;
+  const bestAge = ageGroup.slice().filter(d=>d.age_group!=='Unknown').sort((a,b)=>b.rate-a.rate)[0];
+  document.getElementById('insight_age').innerHTML = `Age helps, but the evidence is incomplete: <b>${fmtPct(unknownAgeShare)}</b> of ages are missing. Among known groups, the highest survival rate appears in <b>${bestAge.age_group}</b> (${fmtPct(bestAge.rate)}).`;
+  document.getElementById('insight_age2').innerHTML = `Notice how the survivor bars concentrate in younger bins, but don’t overpower gender/class. Age matters—just not as much as access.`;
+
+  // Fare insights
+  const topFare = fareQ.slice().sort((a,b)=>b.rate-a.rate)[0];
+  const lowFare = fareQ.slice().sort((a,b)=>a.rate-b.rate)[0];
+  document.getElementById('insight_fare').innerHTML = `Money leaves a trace: passengers in the <b>${topFare.fare_q}</b> fare quartile survive at <b>${fmtPct(topFare.rate)}</b>, while the <b>${lowFare.fare_q}</b> quartile is at <b>${fmtPct(lowFare.rate)}</b>.`;
+  document.getElementById('insight_fare2').innerHTML = `But fare isn’t destiny—overlap in the boxplots shows that some low-fare passengers made it, and some high-fare passengers didn’t. This is where timing and chaos enter the case.`;
+
+  // Family/embarked
+  const bestFam = family.slice().sort((a,b)=>b.rate-a.rate)[0];
+  const worstFam = family.slice().sort((a,b)=>a.rate-b.rate)[0];
+  document.getElementById('insight_family').innerHTML = `Family size is a double-edged tool. Best band: <b>${bestFam.family_band}</b> (${fmtPct(bestFam.rate)}). Worst band: <b>${worstFam.family_band}</b> (${fmtPct(worstFam.rate)}). Coordination helps—until it becomes a crowd.`;
+
+  const bestEmb = emb.slice().sort((a,b)=>b.rate-a.rate)[0];
+  document.getElementById('insight_embarked').innerHTML = `Embarkation port correlates with survival; the best-performing port here is <b>${bestEmb.embarked}</b> (${fmtPct(bestEmb.rate)}). This likely reflects who boarded where—not the port itself.`;
+
+  // Model
+  const auc = model.auc;
+  const worst = model.items.slice().sort((a,b)=>a.odds_ratio-b.odds_ratio)[0];
+  const best = model.items.slice().sort((a,b)=>b.odds_ratio-a.odds_ratio)[0];
+  document.getElementById('insight_model').innerHTML = `The model separates survivors from non-survivors with AUC ≈ <b>${auc.toFixed(3)}</b> (strong for such a small feature set). Biggest negative factor: <b>${worst.feature}</b> (odds ratio ${worst.odds_ratio.toFixed(2)}). Biggest positive: <b>${best.feature}</b> (odds ratio ${best.odds_ratio.toFixed(2)}).`;
+}
+
+function renderProfilesTable(rows){
+  const tbody = document.querySelector('#profiles_table tbody');
+  tbody.innerHTML='';
+  rows.forEach(r=>{
+    const tr=document.createElement('tr');
+    const cells=[r.sex, r.pclass, r.alone, r.n, (r.rate*100).toFixed(1)+'%'];
+    cells.forEach((c)=>{
+      const td=document.createElement('td');
+      td.textContent = c;
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+}
+
+async function main(){
+  ensureReveal();
+
+  const [summary, sexRows, classRows, heat, ageHist, ageGroup, fareQ, fareBy, family, emb, model, profiles] = await Promise.all([
+    loadJSON('titanic_summary.json'),
+    loadJSON('survival_by_sex.json'),
+    loadJSON('survival_by_class.json'),
+    loadJSON('survival_heatmap_sex_class.json'),
+    loadJSON('age_histogram.json'),
+    loadJSON('survival_by_age_group.json'),
+    loadJSON('survival_by_fare_quartile.json'),
+    loadJSON('fare_by_survival.json'),
+    loadJSON('family_band.json'),
+    loadJSON('embarked.json'),
+    loadJSON('logit_model.json'),
+    loadJSON('top_profiles.json')
+  ]);
+
+  updateKpis(summary);
+
+  barSurvivalRate('chart_sex', sexRows, 'sex', 'Survival rate by sex', 'rgba(247,201,72,0.85)');
+  barSurvivalRate('chart_class', classRows, 'pclass', 'Survival rate by passenger class', 'rgba(138,124,255,0.78)');
+  heatmap('chart_heat', heat);
+
+  const ageView = document.getElementById('age_view');
+  ageHistogram('chart_age', ageHist, ageView.value);
+  ageView.addEventListener('change', ()=>ageHistogram('chart_age', ageHist, ageView.value));
+
+  fareBox('chart_fare', fareBy);
+  rateBar('chart_fare_q', fareQ, 'fare_q', 'Survival by fare quartile', 'rgba(247,201,72,0.72)');
+
+  rateBar('chart_family', family, 'family_band', 'Survival by family size band', 'rgba(77,227,193,0.72)');
+  rateBar('chart_embarked', emb, 'embarked', 'Survival by embarkation port', 'rgba(138,124,255,0.72)');
+
+  oddsChart('chart_model', model);
+  renderProfilesTable(profiles);
+
+  setInsights(summary, sexRows, classRows, heat, ageHist, ageGroup, fareQ, family, emb, model);
+
+  // Smooth intro after data load
+  requestAnimationFrame(()=>document.querySelectorAll('.reveal').forEach(n=>n.classList.add('inview')));
+}
+
+main().catch(err=>{
+  console.error(err);
+  const msg = document.createElement('div');
+  msg.style.cssText = 'position:fixed;left:16px;right:16px;bottom:16px;padding:12px 14px;border:1px solid rgba(255,92,122,.45);background:rgba(12,18,32,.95);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.55);color:rgba(215,224,255,.92);font-family:ui-monospace, Menlo, monospace;z-index:9999;';
+  msg.textContent = 'Evidence files failed to load. Make sure the JSON files are in the same folder as this HTML: ' + err.message;
+  document.body.appendChild(msg);
+});
+</script>
+</body></html>
